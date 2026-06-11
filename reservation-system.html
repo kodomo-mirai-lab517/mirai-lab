@@ -1,703 +1,311 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>こどもおしごと未来ラボ｜体験予約システム</title>
-<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
-<style>
-  :root{--navy:#073B4C;--teal:#118AB2;--gold:#F4A61D;--coral:#EF476F;--orange:#FF6B35;--mint:#06D6A0;--purple:#7B5EA7;--sun:#FFD166;--shadow:0 8px 28px rgba(7,59,76,0.10);}
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Zen Maru Gothic',sans-serif;background:linear-gradient(150deg,#e8f6ff 0%,#fef9ec 55%,#f0fdf4 100%);min-height:100vh;color:var(--navy);}
-  header{background:var(--navy);position:relative;}
-  .hdr{max-width:1040px;margin:0 auto;padding:22px 20px 18px;display:flex;align-items:center;gap:14px;}
-  .hdr-logo .en{font-size:10px;color:var(--sun);letter-spacing:2px;}
-  .hdr-logo .ja{font-family:'Kaisei Decol',serif;font-size:22px;font-weight:700;color:#fff;margin:3px 0;}
-  .hdr-logo .sub{font-size:11px;color:#9fcfdf;}
-  .hdr-icons{margin-left:auto;font-size:24px;display:flex;gap:5px;}
-  .hdr-deco{position:absolute;bottom:-2px;left:0;right:0;height:20px;background:linear-gradient(150deg,#e8f6ff,#fef9ec);clip-path:ellipse(55% 100% at 50% 100%);}
-  .nav{max-width:1040px;margin:22px auto 0;padding:0 20px;display:flex;gap:8px;flex-wrap:wrap;}
-  .ntab{padding:8px 16px;border-radius:999px;border:2px solid transparent;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;background:#fff;color:#666;box-shadow:0 2px 8px rgba(0,0,0,.06);white-space:nowrap;}
-  .ntab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
-  .ntab:hover:not(.active){border-color:var(--teal);color:var(--teal);}
-  main{max-width:1040px;margin:0 auto;padding:20px;}
-  .panel{display:none;}.panel.active{display:block;}
-  .lock-screen{display:flex;align-items:center;justify-content:center;min-height:300px;}
-  .lock-box{background:#fff;border-radius:20px;padding:34px 28px;max-width:340px;width:100%;text-align:center;box-shadow:var(--shadow);}
-  .lock-icon{font-size:44px;margin-bottom:10px;}
-  .lock-title{font-family:'Kaisei Decol',serif;font-size:19px;color:var(--navy);margin-bottom:14px;}
-  .lock-inp{width:100%;padding:11px 13px;border:2px solid #e0eef5;border-radius:12px;font-family:'Zen Maru Gothic',sans-serif;font-size:15px;text-align:center;outline:none;letter-spacing:4px;margin-bottom:10px;transition:border-color .2s;}
-  .lock-inp:focus{border-color:var(--teal);}
-  .lock-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--teal),var(--mint));color:#fff;border:none;border-radius:12px;font-family:'Zen Maru Gothic',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
-  .lock-err{font-size:12px;color:var(--coral);margin-top:5px;display:none;}
-  .card{background:#fff;border-radius:18px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;}
-  .card-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--teal);text-transform:uppercase;margin-bottom:5px;}
-  .sec{font-family:'Kaisei Decol',serif;font-size:19px;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-  .sec::before{content:'';display:block;width:5px;height:22px;background:linear-gradient(180deg,var(--sun),var(--coral));border-radius:4px;}
-  .notes-box{background:#f0faff;border:2px solid #b8dff5;border-radius:14px;padding:16px 18px;margin-bottom:14px;}
-  .notes-box h4{font-size:13px;font-weight:900;color:var(--teal);margin-bottom:8px;}
-  .notes-box li{font-size:12px;line-height:1.85;color:#555;list-style:none;margin-bottom:1px;}
-  .notes-box li::before{content:"⚫︎";color:#333;margin-right:5px;font-size:10px;}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  @media(max-width:540px){.grid{grid-template-columns:1fr;}}
-  .fg{display:flex;flex-direction:column;gap:5px;}
-  .fg.full{grid-column:1/-1;}
-  .lbl{font-size:12px;font-weight:700;color:#555;}
-  .req{color:var(--coral);}
-  .opt{color:#aaa;font-weight:400;font-size:11px;}
-  .inp,.sel{padding:11px 13px;border:2px solid #e0eef5;border-radius:11px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;color:var(--navy);outline:none;transition:border-color .2s;background:#fafcff;}
-  .inp:focus,.sel:focus{border-color:var(--teal);background:#fff;}
-  .sel{appearance:none;cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23118AB2' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;background-color:#fafcff;}
-  .hr{height:1px;background:linear-gradient(90deg,transparent,#e0eef5,transparent);margin:16px 0;}
-  .members-list{display:flex;flex-direction:column;gap:12px;}
-  .member-card{background:linear-gradient(135deg,#f8fdff,#f0fff8);border:2px solid #d0eef8;border-radius:14px;padding:16px;}
-  .member-card-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-  .member-num{background:var(--teal);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
-  .member-del{margin-left:auto;background:none;border:none;color:#ccc;cursor:pointer;font-size:17px;padding:0 3px;}
-  .member-del:hover{color:var(--coral);}
-  .add-member-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:12px;border:2px dashed #b0d8e8;border-radius:13px;background:transparent;color:var(--teal);font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:4px;}
-  .add-member-btn:hover{background:#e8f8ff;border-color:var(--teal);}
-  .slots-wrap{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
-  .slot-opt{padding:7px 12px;border:2px solid #dde8f0;border-radius:9px;font-size:12px;font-weight:700;color:#888;cursor:pointer;transition:all .15s;background:#fafcff;user-select:none;}
-  .slot-opt.avail{color:var(--teal);border-color:#b0dff0;}
-  .slot-opt.sel1{background:var(--teal);border-color:var(--teal);color:#fff;}
-  .slot-opt.sel2{background:var(--orange);border-color:var(--orange);color:#fff;}
-  .slot-opt.full{color:#ccc;border-color:#eee;background:#f7f7f7;cursor:not-allowed;text-decoration:line-through;}
-  .slot-opt.unavail{color:#ddd;border-color:#eee;background:#f5f5f5;cursor:not-allowed;}
-  .slot-hint{font-size:11px;color:#aaa;margin-top:5px;}
-  .chk-item{display:flex;align-items:flex-start;gap:11px;cursor:pointer;padding:11px 13px;border:2px solid #e0eef5;border-radius:11px;transition:border-color .2s;background:#fafcff;margin-bottom:9px;}
-  .chk-item:hover{border-color:var(--teal);}
-  .chk-item input{display:none;}
-  .chk-box{width:21px;height:21px;min-width:21px;border:2px solid #c0d8e8;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px;font-size:11px;font-weight:900;color:transparent;}
-  .chk-item input:checked~.chk-box{background:var(--teal);border-color:var(--teal);color:#fff;}
-  .chk-lbl{font-size:13px;line-height:1.7;color:#444;}
-  .alert{display:none;padding:11px 14px;border-radius:11px;font-size:13px;font-weight:700;margin-bottom:12px;}
-  .alert.error{display:block;background:#fff0f3;color:var(--coral);border:1.5px solid #ffc0cc;}
-  .sub-btn{display:block;width:100%;padding:16px;border:none;border-radius:13px;font-family:'Zen Maru Gothic',sans-serif;font-size:15px;font-weight:900;color:#fff;cursor:pointer;letter-spacing:1px;background:linear-gradient(135deg,var(--coral),var(--orange));box-shadow:0 4px 16px rgba(239,71,111,.3);transition:transform .15s,box-shadow .15s;}
-  .sub-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(239,71,111,.4);}
-  .sched-tabs{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
-  .sched-tab{padding:7px 18px;border-radius:999px;border:2px solid #e0eef5;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;background:#fafcff;color:#888;}
-  .sched-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
-  .sched-wrap{overflow-x:auto;}
-  .sched-tbl{width:100%;border-collapse:separate;border-spacing:0;min-width:420px;}
-  .sched-tbl th{background:var(--navy);color:#fff;padding:8px 6px;font-size:12px;font-weight:700;text-align:center;}
-  .sched-tbl th:first-child{border-radius:9px 0 0 0;}.sched-tbl th:last-child{border-radius:0 9px 0 0;}
-  .sched-tbl td{padding:5px;border:1px solid #eef3f8;font-size:11px;vertical-align:middle;text-align:center;background:#fff;}
-  .sched-tbl td.tc{font-weight:700;color:var(--teal);background:#f0faff;white-space:nowrap;}
-  .sched-tbl td.booked{background:linear-gradient(135deg,#fff0f5,#ffeef5);}
-  .sched-tbl td.unavail-cell{background:#f5f5f5;}
-  .chip-book{display:inline-block;background:var(--coral);color:#fff;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:700;line-height:1.4;}
-  .chip-free{display:inline-block;background:#e8f8f0;color:#05a87e;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:700;}
-  .chip-na{display:inline-block;color:#ccc;font-size:11px;}
-  .chip-unavail{display:inline-block;background:#f8d7e3;color:var(--coral);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;}
-  .vm-bar{display:flex;gap:7px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
-  .vm-lbl{font-size:12px;font-weight:700;color:#888;}
-  .vm-btn{padding:5px 13px;border-radius:999px;border:2px solid #e0eef5;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;background:#fafcff;color:#888;font-family:'Zen Maru Gothic',sans-serif;}
-  .vm-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
-  .booth-grid-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;margin-bottom:16px;}
-  .booth-card{background:linear-gradient(135deg,#f8fdff,#f0fdf8);border:2px solid #e0f0f8;border-radius:14px;padding:16px;transition:border-color .2s;}
-  .booth-card:hover{border-color:var(--teal);}
-  .bch{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
-  .bch-name{flex:1;border:none;border-bottom:2px solid #cde8f5;padding:3px 5px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;color:var(--navy);background:transparent;outline:none;}
-  .bch-name:focus{border-color:var(--teal);}
-  .emoji-sel{font-size:20px;cursor:pointer;padding:2px 5px;border:2px solid #e0eef5;border-radius:7px;background:#fff;}
-  .emoji-sel:hover{border-color:var(--gold);}
-  .del-booth-btn{background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:0 2px;}
-  .del-booth-btn:hover{color:var(--coral);}
-  .emoji-picker{display:none;flex-wrap:wrap;gap:5px;padding:9px;background:#fff;border:2px solid #e0eef5;border-radius:11px;margin-bottom:7px;box-shadow:0 4px 14px rgba(0,0,0,.1);}
-  .emoji-picker.open{display:flex;}
-  .ep-btn{font-size:20px;cursor:pointer;padding:3px;border-radius:7px;border:2px solid transparent;}
-  .ep-btn:hover{border-color:var(--gold);}
-  .age-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px;}
-  .age-chip{padding:4px 9px;border:1.5px solid #dde8f0;border-radius:999px;font-size:11px;font-weight:700;color:#888;cursor:pointer;transition:all .15s;background:#fafcff;user-select:none;}
-  .age-chip.on{background:var(--purple);border-color:var(--purple);color:#fff;}
-  .age-chip:hover:not(.on){border-color:var(--purple);color:var(--purple);}
-  .bch-ta{width:100%;padding:7px 9px;border:2px solid #cde8f5;border-radius:9px;font-family:'Zen Maru Gothic',sans-serif;font-size:12px;color:var(--navy);background:#fff;outline:none;resize:vertical;min-height:56px;line-height:1.6;margin-top:5px;transition:border-color .2s;}
-  .bch-ta:focus{border-color:var(--teal);}
-  .tsl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
-  .tsl-btn{padding:4px 2px;font-size:10px;font-family:'Zen Maru Gothic',sans-serif;font-weight:700;border:1.5px solid #cde8f5;border-radius:5px;background:#fff;color:#aaa;cursor:pointer;transition:all .15s;text-align:center;}
-  .tsl-btn.on{background:var(--teal);border-color:var(--teal);color:#fff;}
-  .tsl-btn.off-na{background:#f8d7e3;border-color:var(--coral);color:var(--coral);}
-  .add-booth-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:2px dashed #b0d8e8;border-radius:13px;background:transparent;color:var(--teal);font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
-  .add-booth-btn:hover{background:#e8f8ff;border-color:var(--teal);}
-  .save-btn{display:block;margin:16px auto 0;padding:12px 40px;background:linear-gradient(135deg,var(--teal),var(--mint));color:#fff;border:none;border-radius:999px;font-family:'Zen Maru Gothic',sans-serif;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 14px rgba(6,214,160,.3);transition:transform .15s;}
-  .save-btn:hover{transform:translateY(-2px);}
-  .day-sec-lbl{font-size:13px;font-weight:900;color:var(--teal);border-bottom:2px dashed #d0eaf5;padding-bottom:4px;margin:12px 0 9px;}
-  .day-add-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
-  .day-add-sel{padding:7px 11px;border:2px solid #e0eef5;border-radius:9px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;color:var(--navy);outline:none;background:#fafcff;cursor:pointer;}
-  .modal-bg{display:none;position:fixed;inset:0;background:rgba(7,59,76,.55);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-  .modal-bg.open{display:flex;}
-  .modal-box{background:#fff;border-radius:20px;padding:28px 24px;max-width:440px;width:92%;text-align:center;box-shadow:0 20px 56px rgba(7,59,76,.25);animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
-  @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-  .modal-icon{font-size:48px;margin-bottom:9px;}
-  .modal-title{font-family:'Kaisei Decol',serif;font-size:19px;color:var(--navy);margin-bottom:9px;}
-  .modal-body{font-size:13px;color:#666;line-height:1.9;margin-bottom:18px;text-align:left;}
-  .modal-close{padding:10px 34px;background:var(--navy);color:#fff;border:none;border-radius:999px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
-</style>
-</head>
-<body>
-<header>
-  <div class="hdr">
-    <div class="hdr-logo">
-      <div class="en">KODOMO OSHIGOTO MIRAI LAB</div>
-      <div class="ja">こどもおしごと未来ラボ</div>
-      <div class="sub">2026年8月29日（土）・30日（日）開催</div>
-    </div>
-    <div class="hdr-icons">🏭🔬🎨🍳</div>
-  </div>
-  <div class="hdr-deco"></div>
-</header>
-<div class="nav">
-  <button class="ntab active" onclick="switchTab('reserve',this)">🎫 体験予約</button>
-  <button class="ntab" onclick="switchTab('schedule',this)">📅 予約状況</button>
-  <button class="ntab" onclick="switchTab('admin',this)">⚙️ 管理設定</button>
-</div>
-<main>
-  <!-- 予約フォーム -->
-  <div id="panel-reserve" class="panel active">
-    <div class="notes-box">
-      <h4>【おしごと体験について】</h4>
-      <ul>
-        <li>企業、マルシェ、飲食、キッチンカー全てのブースで体験は可能です。（受け入れ不可の店舗もあります。）</li>
-        <li>体験中はお子様のサポートや見守りをお願い致します。</li>
-        <li>体験の受け入れは、学生や保護者も可能です。</li>
-        <li>おしごと体験をすると、1コマに付きミラ札が1枚もらえます。</li>
-        <li>ミラ札は当イベント内でのみ使用できる独自通貨です。</li>
-        <li>ミラ札1枚で100ポイント。1ポイント1円換算となります。</li>
-        <li>ミラ札は余っても換金出来ません。</li>
-        <li>出店に伴う事故・トラブル・損害等につきましては、主催者では責任を負いかねますので、あらかじめご了承ください。</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="card-lbl">RESERVATION FORM</div>
-      <div class="sec">おしごと体験を予約しよう！</div>
-      <div id="res-alert" class="alert"></div>
-      <label class="chk-item" style="margin-bottom:14px">
-        <input type="checkbox" id="chk-notes">
-        <span class="chk-box">✓</span>
-        <span class="chk-lbl">上記の注意事項を確認しました。</span>
-      </label>
-      <div style="background:#f0faff;border:2px solid #c8e8f8;border-radius:13px;padding:14px;margin-bottom:16px;">
-        <div style="font-size:13px;font-weight:900;color:var(--teal);margin-bottom:10px;">保護者の連絡先</div>
-        <div class="grid">
-          <div class="fg">
-            <label class="lbl">電話番号 <span class="req">*</span></label>
-            <input class="inp" id="f-phone" type="tel" placeholder="例：090-1234-5678">
-          </div>
-          <div class="fg">
-            <label class="lbl">メールアドレス <span class="req">*</span></label>
-            <input class="inp" id="f-email" type="email" placeholder="例：parent@example.com">
-          </div>
-        </div>
-      </div>
-      <div style="font-size:13px;font-weight:900;color:var(--navy);margin-bottom:10px;">
-        体験される方の情報 <span class="req">*</span>
-        <span class="opt">（お一人ずつ日程・ブース・時間を選べます）</span>
-      </div>
-      <div class="members-list" id="members-list"></div>
-      <button class="add-member-btn" onclick="addMember()">＋ 体験者を追加する</button>
-      <div style="margin-top:14px">
-        <button class="sub-btn" onclick="submitReservation()">✨ 予約を確定する</button>
-      </div>
-      <p style="font-size:11px;color:#aaa;text-align:center;margin-top:9px">予約完了後、<strong>kodomo.mirai.lab517@gmail.com</strong> より確認メールが届きます</p>
-      <div style="margin-top:12px;background:#f0faff;border:2px solid #b8dff5;border-radius:13px;padding:13px 16px;display:flex;gap:10px;align-items:flex-start;">
-        <span style="font-size:20px;flex-shrink:0">📧</span>
-        <div style="font-size:12px;color:#555;line-height:1.8;">
-          <strong style="color:var(--navy);display:block;margin-bottom:2px">予約のキャンセルについて</strong>
-          キャンセルをご希望の場合は <strong>kodomo.mirai.lab517@gmail.com</strong> までご連絡ください。
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- 予約状況 -->
-  <div id="panel-schedule" class="panel">
-    <div class="card">
-      <div class="card-lbl">SCHEDULE</div>
-      <div class="sec">予約状況一覧</div>
-      <div class="vm-bar">
-        <span class="vm-lbl">表示：</span>
-        <button class="vm-btn active" id="vm-public" onclick="setViewMode('public',this)">来場者向け</button>
-        <button class="vm-btn" id="vm-admin" onclick="setViewMode('admin',this)">管理者・出展者向け</button>
-      </div>
-      <div id="vm-lock-msg" style="display:none;background:#fff3f0;border:1.5px solid #ffb3c6;border-radius:9px;padding:9px 13px;font-size:12px;color:var(--coral);margin-bottom:10px;">
-        管理者・出展者向け表示には管理設定タブからログインしてください。
-      </div>
-      <div class="sched-tabs">
-        <button class="sched-tab active" onclick="switchSchedDay('0829',this)">8月29日（土）</button>
-        <button class="sched-tab" onclick="switchSchedDay('0830',this)">8月30日（日）</button>
-      </div>
-      <div class="sched-wrap">
-        <table class="sched-tbl"><thead id="sched-head"></thead><tbody id="sched-body"></tbody></table>
-      </div>
-    </div>
-  </div>
-  <!-- 管理設定 -->
-  <div id="panel-admin" class="panel">
-    <div id="admin-lock" class="lock-screen">
-      <div class="lock-box">
-        <div class="lock-icon">🔐</div>
-        <div class="lock-title">管理者ログイン</div>
-        <input class="lock-inp" type="password" id="pw-input" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter')checkPW()">
-        <button class="lock-btn" onclick="checkPW()">ログイン</button>
-        <div class="lock-err" id="pw-err">パスワードが違います</div>
-      </div>
-    </div>
-    <div id="admin-content" style="display:none">
-      <div class="card">
-        <div class="card-lbl">RESERVATION MANAGEMENT</div>
-        <div class="sec">予約の管理・削除</div>
-        <div class="sched-tabs">
-          <button class="sched-tab active" id="adm-tab-0829" onclick="switchAdminDay('0829',this)">8月29日（土）</button>
-          <button class="sched-tab" id="adm-tab-0830" onclick="switchAdminDay('0830',this)">8月30日（日）</button>
-        </div>
-        <p style="font-size:12px;color:#aaa;margin-bottom:12px">削除ボタンを押すと予約が削除されます。</p>
-        <div id="admin-res-list"></div>
-      </div>
-      <div class="card">
-        <div class="card-lbl">BOOTH SETTINGS</div>
-        <div class="sec">ブース・時間の管理設定</div>
-        <p style="font-size:12px;color:#888;margin-bottom:10px">設定は自動で保存されます。リロードしても消えません。</p>
-        <div class="day-add-row">
-          <label style="font-size:13px;font-weight:700;color:var(--navy)">追加する日程：</label>
-          <select class="day-add-sel" id="add-booth-day">
-            <option value="0829">8月29日（土）</option>
-            <option value="0830">8月30日（日）</option>
-          </select>
-          <button class="add-booth-btn" style="width:auto;padding:8px 16px;" onclick="addBooth()">＋ ブースを追加</button>
-        </div>
-        <div id="booth-grid-admin"></div>
-        <button class="save-btn" onclick="saveAll()">💾 設定を保存する</button>
-      </div>
-    </div>
-  </div>
-</main>
-<div class="modal-bg" id="modal">
-  <div class="modal-box">
-    <div class="modal-icon" id="modal-icon">🎉</div>
-    <div class="modal-title" id="modal-title">完了！</div>
-    <div class="modal-body" id="modal-body"></div>
-    <button class="modal-close" onclick="closeModal()">閉じる</button>
-  </div>
-</div>
-<script>
-const ADMIN_PW = 'mirai2026';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby8FvGyMXqlLj8AbNtVVlDUj8bxE2GJCFM-UX6mdMxliGR6nMoI6LzsVrWkWxI5Q4-3_w/exec';
-const DAYS = ['0829','0830'];
-const DAY_LABELS = {'0829':'8月29日（土）','0830':'8月30日（日）'};
-const ALL_EMOJIS = ['🍳','🔬','🎨','🚒','💊','🛠️','🌱','📸','🎵','🐾','🧁','🪴','🎭','🧪','🐕','🏪','🎪','🍰','🌸','🎸'];
-const ALL_AGES = ['3歳','4歳','5歳','6歳','7歳','8歳','9歳','10歳','11歳','12歳','13〜15歳','16〜18歳','19〜22歳','保護者'];
-const LS_BOOTHS = 'mirai_booths';
-const LS_RESERVATIONS = 'mirai_reservations';
+// ============================================================
+//  かめや 給料自動計算スクリプト v5
+//  新フォーム（2026年6月〜）専用
+//  ・flat staff: 給料1列
+//  ・tiered staff: 給料を〜22時／22時〜の2列に分割
+// ============================================================
 
-function genSlots(){
-  const s=[];
-  for(let h=10;h<16;h++) for(let m=0;m<60;m+=30){
-    const eh=m+30>=60?h+1:h,em=(m+30)%60;
-    s.push(p2(h)+':'+p2(m)+'〜'+p2(eh)+':'+p2(em));
+const CONFIG = {
+  FORM_SHEET: 'フォームの回答 1',
+  STAFF: {
+    '小笠原祐美': { nick: 'ゆみさん', type: 'flat',   rate: 1600 },
+    '高橋由美子': { nick: 'たかはし', type: 'tiered'              },
+    '板橋香津枝': { nick: 'かずえ',   type: 'flat',   rate: 1500 },
+    '森蔭佐知':   { nick: 'さち',     type: 'tiered'              },
+  },
+  TIERED: { before22: 1300, after22: 1500 },
+  ALLOWANCE: { douhan: 1000, champagne: 1000, insta: 500, raitenRate: 0.15 },
+};
+
+const COL = {
+  timestamp: 0, email: 1, name: 2, workDate: 3,
+  startTime: 4, endTime: 5, drinks: 6, douhan: 7, raiten: 8, remarks: 9,
+};
+
+// ── 手動実行：今月分のみ ─────────────────────────────────────
+function updateSalarySheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const now = new Date();
+  const thisYM = now.getFullYear() * 100 + (now.getMonth() + 1);
+  const rows = getTargetRows(ss, thisYM, thisYM);
+  if (rows.length === 0) {
+    SpreadsheetApp.getUi().alert('今月のデータがありません。');
+    return;
   }
-  return s;
-}
-function p2(n){return String(n).padStart(2,'0');}
-const ALL_SLOTS = genSlots();
-function makeDefaultSlots(){const o={};ALL_SLOTS.forEach(s=>o[s]='available');return o;}
-
-// ── ローカルストレージ ──
-function lsGet(key, def){
-  try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;}
-}
-function lsSet(key, val){
-  try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}
+  const groups = groupRows(rows);
+  let count = 0;
+  Object.keys(groups).sort().forEach(key => {
+    const g = groups[key];
+    const cfg = CONFIG.STAFF[g[0].name];
+    writeSheet(ss, makeSheetName(cfg.nick, g[0].yearMonth), g, g[0].name, cfg);
+    count++;
+  });
+  SpreadsheetApp.getUi().alert('完了！' + count + 'シートを更新しました。');
 }
 
-// ── STATE（ローカルストレージから復元）──
-let booths = lsGet(LS_BOOTHS, {'0829':[],'0830':[]});
-let reservations = lsGet(LS_RESERVATIONS, {'0829':[],'0830':[]});
-let members = [];
-let currentSchedDay = '0829';
-let currentAdminDay = '0829';
-let viewMode = 'public';
-let adminLoggedIn = false;
-
-function saveAll(){
-  lsSet(LS_BOOTHS, booths);
-  lsSet(LS_RESERVATIONS, reservations);
-  showToast('保存しました ✅');
-  renderSchedule(); renderMembers();
+// ── 先月分 ──────────────────────────────────────────────────
+function updateLastMonth() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const now = new Date();
+  let y = now.getFullYear(), m = now.getMonth();
+  if (m === 0) { y--; m = 12; }
+  const lastYM = y * 100 + m;
+  const rows = getTargetRows(ss, lastYM, lastYM);
+  if (rows.length === 0) {
+    SpreadsheetApp.getUi().alert('先月のデータがありません。');
+    return;
+  }
+  const groups = groupRows(rows);
+  let count = 0;
+  Object.keys(groups).sort().forEach(key => {
+    const g = groups[key];
+    const cfg = CONFIG.STAFF[g[0].name];
+    writeSheet(ss, makeSheetName(cfg.nick, g[0].yearMonth), g, g[0].name, cfg);
+    count++;
+  });
+  SpreadsheetApp.getUi().alert('先月分 完了！' + count + 'シートを更新しました。');
 }
 
-// ── TABS ──
-function switchTab(tab,el){
-  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('panel-'+tab).classList.add('active');
-  if(tab==='schedule') renderSchedule();
-  if(tab==='admin'){renderBoothAdmin();renderAdminResList();}
-}
-function showToast(msg){
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#073B4C;color:#fff;padding:10px 24px;border-radius:999px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);white-space:nowrap';
-  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+// ── フォーム送信トリガー ─────────────────────────────────────
+function onFormSubmit(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const row = e.values;
+  const name = String(row[COL.name] || '').trim();
+  if (!CONFIG.STAFF[name]) return;
+  const workDate = parseDate(row[COL.workDate]);
+  if (!workDate) return;
+  const ym = workDate.getFullYear() * 100 + (workDate.getMonth() + 1);
+  const allRows = getTargetRows(ss, ym, ym);
+  const target = allRows.filter(r => r.name === name);
+  if (target.length === 0) return;
+  const cfg = CONFIG.STAFF[name];
+  writeSheet(ss, makeSheetName(cfg.nick, ym), target, name, cfg);
 }
 
-// ── ADMIN ──
-function checkPW(){
-  if(document.getElementById('pw-input').value===ADMIN_PW){
-    adminLoggedIn=true;
-    document.getElementById('admin-lock').style.display='none';
-    document.getElementById('admin-content').style.display='block';
-    renderBoothAdmin();renderAdminResList();
+// ── 対象行取得 ───────────────────────────────────────────────
+function getTargetRows(ss, fromYM, toYM) {
+  const sheet = ss.getSheetByName(CONFIG.FORM_SHEET);
+  if (!sheet) return [];
+  const data = sheet.getDataRange().getValues();
+  const rows = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const name = String(row[COL.name] || '').trim();
+    if (!CONFIG.STAFF[name]) continue;
+    const workDate = parseDate(row[COL.workDate]);
+    if (!workDate) continue;
+    const ym = workDate.getFullYear() * 100 + (workDate.getMonth() + 1);
+    if (ym < fromYM || ym > toYM) continue;
+    rows.push({
+      timestamp: row[COL.timestamp], name, workDate,
+      startTime: row[COL.startTime],
+      endTime:   row[COL.endTime],
+      drinks:    String(row[COL.drinks]  || '').trim(),
+      douhan:    String(row[COL.douhan]  || '').trim(),
+      raiten:    String(row[COL.raiten]  || '').trim(),
+      remarks:   String(row[COL.remarks] || '').trim(),
+      yearMonth: ym,
+    });
+  }
+  return rows;
+}
+
+function groupRows(rows) {
+  const g = {};
+  rows.forEach(r => {
+    const key = r.yearMonth + '_' + r.name;
+    if (!g[key]) g[key] = [];
+    g[key].push(r);
+  });
+  return g;
+}
+
+function makeSheetName(nick, ym) {
+  return nick + String(ym).slice(2,4) + '.' + String(ym).slice(4,6);
+}
+
+// ── シート書き込み ───────────────────────────────────────────
+function writeSheet(ss, sheetName, rows, staffName, cfg) {
+  const existing = ss.getSheetByName(sheetName);
+  if (existing) ss.deleteSheet(existing);
+  const ws = ss.insertSheet(sheetName);
+
+  const isTiered = cfg.type === 'tiered';
+
+  // tiered: 14列、flat: 13列
+  let headers, widths;
+  if (isTiered) {
+    headers = [
+      '氏名','勤務日','出勤時間','退勤時間','備考','時間',
+      '給料\n(〜22時\n1,300円)', '給料\n(22時〜\n1,500円)',
+      '同伴','シャンパン\n/ワイン','来店\n(セット×15%)','インスタ','手当計','合計'
+    ];
+    widths = [80,60,60,60,220,45,75,75,55,70,80,55,60,75];
   } else {
-    document.getElementById('pw-err').style.display='block';
-    document.getElementById('pw-input').value='';
+    headers = [
+      '氏名','勤務日','出勤時間','退勤時間','備考','時間',
+      '給料' + cfg.rate + '円',
+      '同伴','シャンパン\n/ワイン','来店\n(セット×15%)','インスタ','手当計','合計'
+    ];
+    widths = [80,60,60,60,220,45,90,55,70,80,55,60,75];
   }
-}
-function setViewMode(mode,el){
-  if(mode==='admin'&&!adminLoggedIn){document.getElementById('vm-lock-msg').style.display='block';return;}
-  document.getElementById('vm-lock-msg').style.display='none';
-  viewMode=mode;
-  document.querySelectorAll('.vm-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');renderSchedule();
-}
+  const totalCols = headers.length;
 
-// ── MEMBERS ──
-function addMember(){members.push({name:'',age:'',day:'',boothId:'',slots:[]});renderMembers();}
-function removeMember(i){members.splice(i,1);renderMembers();}
-function renderMembers(){
-  const list=document.getElementById('members-list');
-  list.innerHTML='';
-  members.forEach((m,i)=>{
-    const card=document.createElement('div');
-    card.className='member-card';
-    card.innerHTML=`
-      <div class="member-card-head">
-        <div class="member-num">${i+1}</div>
-        <span style="font-size:13px;font-weight:700;color:var(--navy)">体験者 ${i+1}</span>
-        <button class="member-del" onclick="removeMember(${i})">✕</button>
-      </div>
-      <div class="grid" style="margin-bottom:10px">
-        <div class="fg">
-          <label class="lbl">お名前 <span class="req">*</span></label>
-          <input class="inp" placeholder="例：田中はなこ" value="${m.name}" oninput="members[${i}].name=this.value">
-        </div>
-        <div class="fg">
-          <label class="lbl">年齢 <span class="req">*</span></label>
-          <input class="inp" type="number" min="1" max="99" placeholder="例：8" value="${m.age}" oninput="members[${i}].age=this.value;validateMemberAge(${i})">
-        </div>
-      </div>
-      <div class="fg" style="margin-bottom:9px">
-        <label class="lbl">開催日 <span class="req">*</span></label>
-        <select class="sel" onchange="onMemberDayChange(${i},this.value)">
-          <option value="">-- 日程を選んでください --</option>
-          <option value="0829" ${m.day==='0829'?'selected':''}>8月29日（土）</option>
-          <option value="0830" ${m.day==='0830'?'selected':''}>8月30日（日）</option>
-        </select>
-      </div>
-      <div class="fg" style="margin-bottom:9px">
-        <label class="lbl">希望ブース <span class="req">*</span></label>
-        <select class="sel" id="m-booth-${i}" onchange="onMemberBoothChange(${i},this.value)">
-          ${buildBoothOptions(i)}
-        </select>
-      </div>
-      ${getBoothAgeInfo(i)?`<div style="background:#f0f9ff;border:2px solid #c8e8f8;border-radius:9px;padding:9px 11px;font-size:12px;color:var(--teal);margin-bottom:9px;">${getBoothAgeInfo(i)}</div>`:''}
-      ${getBoothExperience(i)?`<div style="background:#fffbf0;border:2px solid #ffe0a0;border-radius:9px;padding:9px 11px;font-size:12px;color:#555;margin-bottom:9px;">体験内容：${getBoothExperience(i)}</div>`:''}
-      <div class="fg">
-        <label class="lbl">希望時間 <span class="req">*</span> <span class="opt">（最大2コマ）</span></label>
-        <div class="slots-wrap" id="m-slots-${i}">${buildSlotPicker(i)}</div>
-        <div class="slot-hint" id="m-slot-hint-${i}">${m.slots.length===0?'ブースを選んでから時間を選んでください':m.slots.join(' ＆ ')}</div>
-      </div>`;
-    list.appendChild(card);
-  });
-}
-function buildBoothOptions(i){
-  const m=members[i];
-  if(!m.day) return '<option value="">-- まず日程を選んでください --</option>';
-  let opts='<option value="">-- ブースを選んでください --</option>';
-  (booths[m.day]||[]).forEach(b=>{opts+=`<option value="${b.id}" ${m.boothId===b.id?'selected':''}>${b.emoji} ${b.name}</option>`;});
-  return opts;
-}
-function getBoothAgeInfo(i){
-  const m=members[i];if(!m.day||!m.boothId)return '';
-  const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
-  return b&&b.ages&&b.ages.length?'対象年齢：'+b.ages.join('・'):'';
-}
-function getBoothExperience(i){
-  const m=members[i];if(!m.day||!m.boothId)return '';
-  const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
-  return b&&b.experience?b.experience:'';
-}
-function buildSlotPicker(i){
-  const m=members[i];
-  if(!m.day||!m.boothId) return '<span style="color:#bbb;font-size:12px">ブースを選ぶと時間が表示されます</span>';
-  const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);if(!b)return '';
-  let html='';
-  ALL_SLOTS.forEach(slot=>{
-    const avail=b.slots[slot]==='available';
-    const booked=(reservations[m.day]||[]).some(r=>r.boothId===m.boothId&&r.slotLabel===slot);
-    const isSel=m.slots.includes(slot);
-    if(!avail) html+=`<div class="slot-opt unavail">${slot} 受付不可</div>`;
-    else if(booked) html+=`<div class="slot-opt full">${slot} 満</div>`;
-    else{
-      let cls='slot-opt '+(isSel?(m.slots.indexOf(slot)===0?'sel1':'sel2'):'avail');
-      html+=`<div class="${cls}" onclick="toggleMemberSlot(${i},'${slot}')">${slot}</div>`;
+  const hRange = ws.getRange(1, 1, 1, totalCols);
+  hRange.setValues([headers]);
+  hRange.setBackground('#D9E1F2');
+  hRange.setFontWeight('bold');
+  hRange.setHorizontalAlignment('center');
+  hRange.setWrap(true);
+  ws.setRowHeight(1, 52);
+  widths.forEach((w, i) => ws.setColumnWidth(i+1, w));
+
+  // データ行
+  const sorted = rows.slice().sort((a,b) => a.workDate - b.workDate);
+  const dataArr = sorted.map(r => {
+    const mins  = calcMinutes(r.startTime, r.endTime);
+    const hours = mins > 0 ? Math.floor(mins / 30) * 0.5 : '';
+    const dou   = r.douhan.trim() !== '' ? CONFIG.ALLOWANCE.douhan : 0;
+    const drk   = calcDrinks(r.drinks);
+    const rai   = calcRaiten(r.raiten);
+    const ins   = (r.remarks.includes('インスタ投稿') || r.remarks.includes('インスタ更新')) ? CONFIG.ALLOWANCE.insta : 0;
+    const allowTotal = dou + drk + rai + ins;
+
+    if (isTiered) {
+      const w1 = calcWageBefore22(r.startTime, r.endTime);
+      const w2 = calcWageAfter22(r.startTime, r.endTime);
+      return [
+        r.name,
+        Utilities.formatDate(r.workDate, 'Asia/Tokyo', 'MM/dd'),
+        formatTime(r.startTime), formatTime(r.endTime), r.remarks,
+        hours||'', w1||'', w2||'',
+        dou||'', drk||'', rai||'', ins||'',
+        allowTotal||'', (w1+w2+allowTotal)||'',
+      ];
+    } else {
+      const wage = calcWageFlat(r.startTime, r.endTime, cfg.rate);
+      return [
+        r.name,
+        Utilities.formatDate(r.workDate, 'Asia/Tokyo', 'MM/dd'),
+        formatTime(r.startTime), formatTime(r.endTime), r.remarks,
+        hours||'', wage||'',
+        dou||'', drk||'', rai||'', ins||'',
+        allowTotal||'', (wage+allowTotal)||'',
+      ];
     }
   });
-  return html;
-}
-function onMemberDayChange(i,day){members[i].day=day;members[i].boothId='';members[i].slots=[];renderMembers();}
-function onMemberBoothChange(i,bId){
-  if(bId&&members[i].age){
-    const b=(booths[members[i].day]||[]).find(x=>x.id===bId);
-    if(b&&b.ages&&b.ages.length){
-      const age=parseInt(members[i].age);
-      const ok=b.ages.some(function(a){
-        if(a==='保護者') return false;
-        const nums=a.match(/[0-9]+/g);if(!nums)return false;
-        if(nums.length===1) return age===parseInt(nums[0]);
-        return age>=parseInt(nums[0])&&age<=parseInt(nums[1]);
-      })||b.ages.includes('保護者');
-      if(!ok){alert('このブースの対象年齢は「'+b.ages.join('・')+'」です。\n体験者'+(i+1)+'（'+members[i].age+'歳）は対象外のため選択できません。');const sel=document.getElementById('m-booth-'+i);if(sel)sel.value='';return;}
-    }
+
+  if (dataArr.length > 0) ws.getRange(2, 1, dataArr.length, totalCols).setValues(dataArr);
+
+  const lastData = dataArr.length + 1;
+  const sumRow   = lastData + 1;
+
+  // 合計行
+  ws.getRange(sumRow, 5).setValue('合計');
+  for (let c = 6; c <= totalCols; c++) {
+    ws.getRange(sumRow, c).setFormula('=SUM(' + columnLetter(c) + '2:' + columnLetter(c) + lastData + ')');
   }
-  members[i].boothId=bId;members[i].slots=[];renderMembers();
+  ws.getRange(sumRow, 1, 1, totalCols).setBackground('#FCE4D6').setFontWeight('bold');
+
+  // 数値フォーマット
+  ws.getRange(2,      6, lastData, 1           ).setNumberFormat('0.0');
+  ws.getRange(2,      7, lastData, totalCols-6 ).setNumberFormat('#,##0');
+  ws.getRange(sumRow, 6, 1,        1           ).setNumberFormat('0.0');
+  ws.getRange(sumRow, 7, 1,        totalCols-6 ).setNumberFormat('#,##0');
+
+  // 枠線
+  ws.getRange(1, 1, sumRow, totalCols).setBorder(true,true,true,true,true,true);
+
+  // 手当列の色（tiered: 9〜12列目、flat: 8〜11列目）
+  const aStart = isTiered ? 9 : 8;
+  ws.getRange(2,      aStart, lastData, 4).setBackground('#FFF2CC');
+  ws.getRange(1,      aStart, 1,        4).setBackground('#FFD966').setFontWeight('bold');
 }
-function validateMemberAge(i){
-  const m=members[i];
-  if(!m.boothId||!m.age||!m.day) return;
-  const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
-  if(!b||!b.ages||!b.ages.length) return;
-  const age=parseInt(m.age);
-  const ok=b.ages.some(function(a){
-    if(a==='保護者') return false;
-    const nums=a.match(/[0-9]+/g);if(!nums)return false;
-    if(nums.length===1) return age===parseInt(nums[0]);
-    return age>=parseInt(nums[0])&&age<=parseInt(nums[1]);
-  })||b.ages.includes('保護者');
-  if(!ok){
-    alert('このブースの対象年齢は「'+b.ages.join('・')+'」です。\n'+age+'歳は対象外です。ブースを変更するか、別のブースをお選びください。');
-    members[i].boothId='';members[i].slots=[];renderMembers();
+
+function columnLetter(col) {
+  return col <= 26 ? String.fromCharCode(64 + col) : 'A' + String.fromCharCode(64 + col - 26);
+}
+
+// ── 給料計算 ─────────────────────────────────────────────────
+function calcWageFlat(startVal, endVal, rate) {
+  const s = parseTimeMin(startVal), e = parseTimeMin(endVal);
+  if (s === null || e === null) return 0;
+  const end = e < s ? e + 1440 : e;
+  const mins = end - s;
+  if (mins <= 0) return 0;
+  return Math.round(Math.floor(mins / 30) * 30 / 60 * rate);
+}
+
+function calcWageBefore22(startVal, endVal) {
+  const s = parseTimeMin(startVal), e = parseTimeMin(endVal);
+  if (s === null || e === null) return 0;
+  const end = e < s ? e + 1440 : e;
+  const t22 = 1320;
+  const se  = Math.max(s, 1200);
+  if (se >= end || se >= t22) return 0;
+  const seg = Math.min(end, t22);
+  return Math.round(Math.floor((seg - se) / 30) * 30 / 60 * CONFIG.TIERED.before22);
+}
+
+function calcWageAfter22(startVal, endVal) {
+  const s = parseTimeMin(startVal), e = parseTimeMin(endVal);
+  if (s === null || e === null) return 0;
+  const end  = e < s ? e + 1440 : e;
+  const t22  = 1320;
+  const seg2 = Math.max(Math.max(s, 1200), t22);
+  if (seg2 >= end) return 0;
+  return Math.round(Math.floor((end - seg2) / 30) * 30 / 60 * CONFIG.TIERED.after22);
+}
+
+// ── 手当計算 ─────────────────────────────────────────────────
+function calcDrinks(val) {
+  const n = parseInt(val, 10);
+  return (!isNaN(n) && n > 0) ? n * CONFIG.ALLOWANCE.champagne : 0;
+}
+
+function calcRaiten(val) {
+  if (!val || val.trim() === '') return 0;
+  const m1 = val.match(/セット[料金金額]*\s*[：:￥¥]?\s*(\d[\d,，]*)/);
+  if (m1) return Math.round(parseInt(m1[1].replace(/[,，]/g,''), 10) * CONFIG.ALLOWANCE.raitenRate);
+  const m2 = val.match(/(\d[\d,，]*)\s*円/);
+  if (m2) return Math.round(parseInt(m2[1].replace(/[,，]/g,''), 10) * CONFIG.ALLOWANCE.raitenRate);
+  const m3 = val.match(/(\d+)/);
+  if (m3) return Math.round(parseInt(m3[1], 10) * CONFIG.ALLOWANCE.raitenRate);
+  return 0;
+}
+
+// ── ユーティリティ ───────────────────────────────────────────
+function parseTimeMin(val) {
+  if (val === null || val === undefined || val === '') return null;
+  if (typeof val === 'number') {
+    // 数値型：1未満は通常時刻、1以上は24時超え
+    return Math.round(val * 24 * 60);
   }
-}
-function toggleMemberSlot(i,slot){
-  const m=members[i];const idx=m.slots.indexOf(slot);
-  if(idx>=0) m.slots.splice(idx,1);
-  else{if(m.slots.length>=2){showAlert('同じブースで選べるのは最大2コマです','res-alert');return;}m.slots.push(slot);m.slots.sort();}
-  clearAlert('res-alert');
-  document.getElementById('m-slots-'+i).innerHTML=buildSlotPicker(i);
-  document.getElementById('m-slot-hint-'+i).textContent=m.slots.length===0?'ブースを選んでから時間を選んでください':m.slots.join(' ＆ ');
+  const str = String(val).replace(/^'+/, '').trim();
+  if (!str) return null;
+  const m = str.match(/(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
 }
 
-// ── SUBMIT ──
-function submitReservation(){
-  if(!document.getElementById('chk-notes').checked){return showAlert('注意事項をご確認の上、チェックを入れてください','res-alert');}
-  const phone=gv('f-phone'),email=gv('f-email');
-  if(!phone||!email){return showAlert('保護者の電話番号・メールアドレスを入力してください','res-alert');}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){return showAlert('メールアドレスの形式が正しくありません','res-alert');}
-  if(members.length===0){return showAlert('体験者を1名以上追加してください','res-alert');}
-  for(let i=0;i<members.length;i++){
-    const m=members[i];
-    if(!m.name||!m.age){return showAlert('体験者'+(i+1)+'のお名前・年齢を入力してください','res-alert');}
-    if(!m.day){return showAlert('体験者'+(i+1)+'の開催日を選択してください','res-alert');}
-    if(!m.boothId){return showAlert('体験者'+(i+1)+'の希望ブースを選択してください','res-alert');}
-    if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
-    for(const slot of m.slots){
-      if((reservations[m.day]||[]).some(r=>r.boothId===m.boothId&&r.slotLabel===slot)){
-        return showAlert('体験者'+(i+1)+'：'+slot+' はすでに予約済みです。別の時間を選んでください。','res-alert');
-      }
-    }
+function formatTime(val) {
+  if (val === null || val === undefined || val === '') return '';
+  if (typeof val === 'number') {
+    const t = Math.round(val * 24 * 60) % 1440;
+    return ('0'+Math.floor(t/60)).slice(-2) + ':' + ('0'+(t%60)).slice(-2);
   }
-  clearAlert('res-alert');
-  let summary='';
-  members.forEach((m,mi)=>{
-    const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
-    const bName=b?b.name:m.boothId;
-    m.slots.forEach(slot=>{
-      const rid='R'+Date.now()+'_'+mi+'_'+slot;
-      reservations[m.day].push({reservationId:rid,boothId:m.boothId,slotLabel:slot,memberName:m.name,memberAge:m.age,phone,email,createdAt:nowStr()});
-      // GASにスプレッドシート記録＋メール送信を依頼
-      const postData = {
-        type: 'saveReservation',
-        reservationId: rid,
-        memberName: String(m.name),
-        memberAge: String(m.age)+'歳',
-        day: DAY_LABELS[m.day],
-        boothName: String(bName),
-        slots: String(slot),
-        phone: String(phone),
-        email: String(email)
-      };
-      fetch(GAS_URL,{method:'POST',body:JSON.stringify(postData)}).catch(()=>{});
-    });
-    summary+=`<br>🧒 ${m.name}（${m.age}歳）　${DAY_LABELS[m.day]}　${b?b.emoji+' ':''+(bName)}　${m.slots.join('・')}`;
-  });
-  // ローカルストレージに保存
-  lsSet(LS_RESERVATIONS, reservations);
-  showModal('🎉','予約完了！','体験予約が確定しました！'+summary+'<br><br>📞 保護者：'+phone+'<br>📧 確認メールを <strong>'+email+'</strong> に送信しました。<br><br><span style="font-size:11px;color:#aaa">送信元：kodomo.mirai.lab517@gmail.com</span>');
-  document.getElementById('f-phone').value='';
-  document.getElementById('f-email').value='';
-  document.getElementById('chk-notes').checked=false;
-  members=[];renderMembers();renderSchedule();
+  return String(val).replace(/^'+/, '').trim();
 }
 
-// ── SCHEDULE ──
-function switchSchedDay(day,el){
-  currentSchedDay=day;
-  document.querySelectorAll('.sched-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');renderSchedule();
-}
-function renderSchedule(){
-  const day=currentSchedDay,db=booths[day]||[];
-  const head=document.getElementById('sched-head'),body=document.getElementById('sched-body');
-  head.innerHTML='';
-  const trh=document.createElement('tr');
-  ['時間',...db.map(b=>b.emoji+' '+b.name)].forEach((t,i)=>{
-    const th=document.createElement('th');th.textContent=t;
-    if(i===0)th.style.borderRadius='9px 0 0 0';
-    if(i===db.length)th.style.borderRadius='0 9px 0 0';
-    trh.appendChild(th);
-  });
-  head.appendChild(trh);
-  body.innerHTML='';
-  ALL_SLOTS.forEach(slot=>{
-    const tr=document.createElement('tr');
-    const tdT=document.createElement('td');tdT.className='tc';tdT.textContent=slot;tr.appendChild(tdT);
-    db.forEach(b=>{
-      const td=document.createElement('td');
-      if(b.slots[slot]==='unavailable'){
-        td.className='unavail-cell';td.innerHTML='<span class="chip-unavail">受付不可</span>';
-      } else if(b.slots[slot]==='available'){
-        const res=(reservations[day]||[]).find(r=>r.boothId===b.id&&r.slotLabel===slot);
-        if(res){
-          td.className='booked';
-          td.innerHTML=viewMode==='admin'
-            ?'<span class="chip-book">'+res.memberName+'('+res.memberAge+'歳)</span>'
-            :'<span class="chip-book">予約済</span>';
-        } else td.innerHTML='<span class="chip-free">空き</span>';
-      } else td.innerHTML='<span class="chip-na">―</span>';
-      tr.appendChild(td);
-    });
-    body.appendChild(tr);
-  });
+function calcMinutes(s, e) {
+  const sm = parseTimeMin(s), em = parseTimeMin(e);
+  if (sm === null || em === null) return 0;
+  return Math.max(0, (em < sm ? em + 1440 : em) - sm);
 }
 
-// ── ADMIN BOOTH ──
-function renderBoothAdmin(){
-  if(!adminLoggedIn)return;
-  const grid=document.getElementById('booth-grid-admin');if(!grid)return;
-  grid.innerHTML='';
-  DAYS.forEach(day=>{
-    if(!(booths[day]||[]).length)return;
-    const lbl=document.createElement('div');lbl.className='day-sec-lbl';lbl.textContent='📅 '+DAY_LABELS[day];grid.appendChild(lbl);
-    const bg=document.createElement('div');bg.className='booth-grid-wrap';grid.appendChild(bg);
-    (booths[day]||[]).forEach((b,i)=>{
-      const div=document.createElement('div');div.className='booth-card';
-      div.innerHTML=`
-        <div class="bch">
-          <span class="emoji-sel" onclick="toggleEmojiPicker('ep-${day}-${i}')">${b.emoji}</span>
-          <input class="bch-name" value="${b.name}" placeholder="ブース名">
-          <button class="del-booth-btn" onclick="removeAdminBooth('${day}',${i})">🗑️</button>
-        </div>
-        <div class="emoji-picker" id="ep-${day}-${i}">
-          ${ALL_EMOJIS.map(e=>`<div class="ep-btn" onclick="setEmoji('${day}',${i},'${e}','ep-${day}-${i}')">${e}</div>`).join('')}
-        </div>
-        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px">📝 おしごと体験の内容</div>
-        <textarea class="bch-ta" placeholder="例：パン生地をこねてミニパンを焼く体験" onchange="booths['${day}'][${i}].experience=this.value">${b.experience||''}</textarea>
-        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px;margin-top:8px">👧 受け入れ可能な年齢</div>
-        <div class="age-chips" id="ac-${day}-${i}"></div>
-        <div style="font-size:11px;color:#888;font-weight:700;margin-bottom:4px;margin-top:6px">受付時間（緑=可・赤=不可）</div>
-        <div class="tsl-grid" id="asg-${day}-${i}"></div>`;
-      div.querySelector('.bch-name').onchange=function(){booths[day][i].name=this.value;};
-      bg.appendChild(div);
-      renderAgeChips(day,i);renderAdminSlotGrid(day,i);
-    });
-  });
+function parseDate(val) {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
 }
-function toggleEmojiPicker(id){
-  document.querySelectorAll('.emoji-picker').forEach(p=>{if(p.id!==id)p.classList.remove('open');});
-  document.getElementById(id).classList.toggle('open');
-}
-function setEmoji(day,i,emoji,pid){booths[day][i].emoji=emoji;document.getElementById(pid).classList.remove('open');renderBoothAdmin();}
-function renderAgeChips(day,idx){
-  const wrap=document.getElementById('ac-'+day+'-'+idx);if(!wrap)return;
-  wrap.innerHTML='';
-  ALL_AGES.forEach(age=>{
-    const c=document.createElement('div');c.className='age-chip'+(booths[day][idx].ages.includes(age)?' on':'');
-    c.textContent=age;
-    c.onclick=()=>{const ages=booths[day][idx].ages;const ai=ages.indexOf(age);if(ai>=0)ages.splice(ai,1);else ages.push(age);renderAgeChips(day,idx);};
-    wrap.appendChild(c);
-  });
-}
-function renderAdminSlotGrid(day,idx){
-  const grid=document.getElementById('asg-'+day+'-'+idx);if(!grid)return;
-  grid.innerHTML='';
-  ALL_SLOTS.forEach(slot=>{
-    const state=booths[day][idx].slots[slot]||'available';
-    const btn=document.createElement('button');
-    btn.className='tsl-btn'+(state==='available'?' on':' off-na');
-    btn.textContent=slot.split('〜')[0];btn.title=slot;
-    btn.onclick=()=>{booths[day][idx].slots[slot]=booths[day][idx].slots[slot]==='available'?'unavailable':'available';renderAdminSlotGrid(day,idx);};
-    grid.appendChild(btn);
-  });
-}
-function addBooth(){
-  const day=document.getElementById('add-booth-day').value;
-  booths[day].push({id:'m_'+Date.now(),name:'新しいブース',emoji:'🏪',slots:makeDefaultSlots(),ages:[],experience:''});
-  renderBoothAdmin();
-}
-function removeAdminBooth(day,i){
-  if(!confirm('「'+booths[day][i].name+'」を削除しますか？'))return;
-  booths[day].splice(i,1);
-  lsSet(LS_BOOTHS,booths);
-  renderBoothAdmin();showToast('ブースを削除しました');
-}
-
-// ── ADMIN RES ──
-function switchAdminDay(day,el){
-  currentAdminDay=day;
-  document.querySelectorAll('#admin-content .sched-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');renderAdminResList();
-}
-function renderAdminResList(){
-  const day=currentAdminDay,list=document.getElementById('admin-res-list');if(!list)return;
-  const dayRes=reservations[day]||[];
-  if(dayRes.length===0){list.innerHTML='<p style="font-size:13px;color:#bbb;font-style:italic;padding:8px 0">この日の予約はありません</p>';return;}
-  list.innerHTML='';
-  dayRes.forEach((r,idx)=>{
-    const b=(booths[day]||[]).find(x=>x.id===r.boothId);
-    const bName=b?b.emoji+' '+b.name:r.boothId;
-    const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 13px;border:2px solid #eef3f8;border-radius:11px;margin-bottom:7px;background:#fff;';
-    row.innerHTML=`
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px">${bName} ／ ${r.slotLabel}</div>
-        <div style="font-size:12px;color:#555;">🧒 ${r.memberName}（${r.memberAge}歳）</div>
-        <div style="font-size:11px;color:#aaa;margin-top:1px">📞 ${r.phone} ／ ${r.createdAt}</div>
-      </div>
-      <button onclick="deleteRes('${day}',${idx})" style="flex-shrink:0;padding:7px 12px;background:#fff0f3;border:2px solid #ffb3c6;border-radius:9px;color:var(--coral);font-family:'Zen Maru Gothic',sans-serif;font-size:12px;font-weight:700;cursor:pointer;" onmouseover="this.style.background='var(--coral)';this.style.color='#fff'" onmouseout="this.style.background='#fff0f3';this.style.color='var(--coral)'">🗑️ 削除</button>`;
-    list.appendChild(row);
-  });
-}
-function deleteRes(day,idx){
-  const r=reservations[day][idx];
-  const b=(booths[day]||[]).find(x=>x.id===r.boothId);
-  if(!confirm('以下の予約を削除しますか？\n\nブース：'+(b?b.name:r.boothId)+'\n時間：'+r.slotLabel+'\n体験者：'+r.memberName+'（'+r.memberAge+'歳）'))return;
-  reservations[day].splice(idx,1);
-  lsSet(LS_RESERVATIONS,reservations);
-  renderAdminResList();renderSchedule();showToast('予約を削除しました 🗑️');
-}
-
-// ── UTILS ──
-function gv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
-function nowStr(){return new Date().toLocaleString('ja-JP');}
-function showAlert(msg,id){const el=document.getElementById(id);if(!el)return;el.className='alert error';el.textContent=msg;el.scrollIntoView({behavior:'smooth',block:'center'});}
-function clearAlert(id){const el=document.getElementById(id);if(el)el.className='alert';}
-function showModal(icon,title,body){document.getElementById('modal-icon').textContent=icon;document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').innerHTML=body;document.getElementById('modal').classList.add('open');}
-function closeModal(){document.getElementById('modal').classList.remove('open');}
-
-// ── INIT ──
-members.push({name:'',age:'',day:'',boothId:'',slots:[]});
-renderMembers();
-renderSchedule();
-</script>
-</body>
-</html>
