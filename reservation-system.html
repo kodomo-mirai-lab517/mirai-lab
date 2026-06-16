@@ -507,31 +507,44 @@ function submitReservation(){
     }
   }
   clearAlert('res-alert');
+
+  // 先にすべての送信データを確定（postDataList）してからループで送信する
+  const postDataList = [];
   let summary='';
   members.forEach((m,mi)=>{
     const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
     const bName=b?b.name:m.boothId;
+    const fixedName = String(m.name||'');
+    const fixedAge  = String(m.age||'');
+    const fixedDay  = String(DAY_LABELS[m.day]||'');
+    const fixedBooth= String(bName||'');
     m.slots.forEach(slot=>{
       const rid='R'+Date.now()+'_'+mi+'_'+slot;
-      reservations[m.day].push({reservationId:rid,boothId:m.boothId,slotLabel:slot,memberName:m.name,memberAge:m.age,phone,email,createdAt:nowStr()});
-      // GASにスプレッドシート記録＋メール送信を依頼
-      const postData = {
+      reservations[m.day].push({reservationId:rid,boothId:m.boothId,slotLabel:slot,memberName:fixedName,memberAge:fixedAge,phone,email,createdAt:nowStr()});
+      postDataList.push({
         type: 'saveReservation',
         reservationId: rid,
-        memberName: String(m.name),
-        memberAge: String(m.age)+'歳',
-        day: DAY_LABELS[m.day],
-        boothName: String(bName),
+        memberName: fixedName,
+        memberAge: fixedAge+'歳',
+        day: fixedDay,
+        boothName: fixedBooth,
         slots: String(slot),
-        phone: String(phone),
-        email: String(email)
-      };
-      fetch(GAS_URL,{method:'POST',body:JSON.stringify(postData)}).catch(()=>{});
+        phone: String(phone||''),
+        email: String(email||'')
+      });
     });
-    summary+=`<br>🧒 ${m.name}（${m.age}歳）　${DAY_LABELS[m.day]}　${b?b.emoji+' ':''+(bName)}　${m.slots.join('・')}`;
+    summary+=`<br>🧒 ${fixedName}（${fixedAge}歳）　${fixedDay}　${b?b.emoji+' ':''+(fixedBooth)}　${m.slots.join('・')}`;
   });
+
   // ローカルストレージに保存
   lsSet(LS_RESERVATIONS, reservations);
+
+  // GASへの送信（確定済みデータのコピーをループで送る）
+  postDataList.forEach(function(pd){
+    const body = JSON.stringify(pd);
+    fetch(GAS_URL, { method:'POST', body: body }).catch(function(){});
+  });
+
   showModal('🎉','予約完了！','体験予約が確定しました！'+summary+'<br><br>📞 保護者：'+phone+'<br>📧 確認メールを <strong>'+email+'</strong> に送信しました。<br><br><span style="font-size:11px;color:#aaa">送信元：kodomo.mirai.lab517@gmail.com</span>');
   document.getElementById('f-phone').value='';
   document.getElementById('f-email').value='';
