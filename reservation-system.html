@@ -500,6 +500,20 @@ function submitReservation(){
     if(!m.day){return showAlert('体験者'+(i+1)+'の開催日を選択してください','res-alert');}
     if(!m.boothId){return showAlert('体験者'+(i+1)+'の希望ブースを選択してください','res-alert');}
     if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
+    // 対象年齢の最終チェック（送信直前にも必ず確認する）
+    const bForAge=(booths[m.day]||[]).find(x=>x.id===m.boothId);
+    if(bForAge&&bForAge.ages&&bForAge.ages.length){
+      const ageNum=parseInt(m.age);
+      const ageOk=bForAge.ages.some(function(a){
+        if(a==='保護者')return false;
+        const nums=a.match(/[0-9]+/g);if(!nums)return false;
+        if(nums.length===1)return ageNum===parseInt(nums[0]);
+        return ageNum>=parseInt(nums[0])&&ageNum<=parseInt(nums[1]);
+      })||bForAge.ages.includes('保護者');
+      if(!ageOk){
+        return showAlert('体験者'+(i+1)+'（'+m.age+'歳）はこのブースの対象年齢「'+bForAge.ages.join('・')+'」に含まれていません。ブースを選び直してください。','res-alert');
+      }
+    }
     for(const slot of m.slots){
       if((reservations[m.day]||[]).some(r=>r.boothId===m.boothId&&r.slotLabel===slot)){
         return showAlert('体験者'+(i+1)+'：'+slot+' はすでに予約済みです。別の時間を選んでください。','res-alert');
