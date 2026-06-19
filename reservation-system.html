@@ -502,6 +502,7 @@ function submitReservation(){
     if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
     // 対象年齢の最終チェック（送信直前にも必ず確認する）
     const bForAge=(booths[m.day]||[]).find(x=>x.id===m.boothId);
+    alert('デバッグ: 体験者'+(i+1)+' age=['+m.age+'] booth=['+(bForAge?bForAge.name:'見つからず')+'] ages=['+(bForAge&&bForAge.ages?bForAge.ages.join(','):'なし')+']');
     if(bForAge&&bForAge.ages&&bForAge.ages.length){
       const ageNum=parseInt(m.age);
       const ageOk=bForAge.ages.some(function(a){
