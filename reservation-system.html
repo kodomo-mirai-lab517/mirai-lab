@@ -361,7 +361,7 @@ function setViewMode(mode,el){
 }
 
 // ── MEMBERS ──
-function addMember(){members.push({name:'',age:'',day:'',boothId:'',boothName:'',slots:[]});renderMembers();}
+function addMember(){members.push({name:'',age:'',day:'',boothId:'',boothName:'',boothAges:[],slots:[]});renderMembers();}
 function removeMember(i){members.splice(i,1);renderMembers();}
 function renderMembers(){
   const list=document.getElementById('members-list');
@@ -446,10 +446,14 @@ function buildSlotPicker(i){
 }
 function onMemberDayChange(i,day){members[i].day=day;members[i].boothId='';members[i].slots=[];renderMembers();}
 function onMemberBoothChange(i,bId){
-  // ブース名も保存しておく（年齢チェックのフォールバック用）
+  // ブース情報を直接メンバーに保存
   if(bId && members[i].day){
     const bFound=(booths[members[i].day]||[]).find(x=>x.id===bId);
     members[i].boothName = bFound ? bFound.name : '';
+    members[i].boothAges = bFound ? (bFound.ages||[]) : [];
+  } else {
+    members[i].boothName = '';
+    members[i].boothAges = [];
   }
   if(bId&&members[i].age){
     const b=(booths[members[i].day]||[]).find(x=>x.id===bId);
@@ -507,21 +511,19 @@ function submitReservation(){
     if(!m.day){return showAlert('体験者'+(i+1)+'の開催日を選択してください','res-alert');}
     if(!m.boothId){return showAlert('体験者'+(i+1)+'の希望ブースを選択してください','res-alert');}
     if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
-    // 対象年齢の最終チェック（送信直前にも必ず確認する）
-    // IDでもブース名でも照合（どちらかが一致すれば取得）
-    const bForAge=(booths[m.day]||[]).find(x=>x.id===m.boothId)||
-                  (booths[m.day]||[]).find(x=>x.name===m.boothName);
-    if(bForAge&&bForAge.ages&&bForAge.ages.length){
+    // 対象年齢の最終チェック（選択時に保存したageを使用）
+    const savedAges = m.boothAges || [];
+    if(savedAges.length>0){
       const ageNum=parseInt(m.age);
-      const ageOk=bForAge.ages.some(function(a){
+      const ageOk=savedAges.some(function(a){
         if(a==='保護者')return false;
         const normalized=a.replace(/[０-９]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-0xFEE0);}).replace(/〜/g,'-').replace(/～/g,'-');
         const nums=normalized.match(/[0-9]+/g);if(!nums)return false;
         if(nums.length===1)return ageNum===parseInt(nums[0]);
         return ageNum>=parseInt(nums[0])&&ageNum<=parseInt(nums[1]);
-      })||bForAge.ages.includes('保護者');
+      })||savedAges.includes('保護者');
       if(!ageOk){
-        return showAlert('体験者'+(i+1)+'（'+m.age+'歳）はこのブースの対象年齢「'+bForAge.ages.join('・')+'」に含まれていません。ブースを選び直してください。','res-alert');
+        return showAlert('体験者'+(i+1)+'（'+m.age+'歳）はこのブースの対象年齢「'+savedAges.join('・')+'」に含まれていません。ブースを選び直してください。','res-alert');
       }
     }
     for(const slot of m.slots){
@@ -732,7 +734,7 @@ function showModal(icon,title,body){document.getElementById('modal-icon').textCo
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 
 // ── INIT ──
-members.push({name:'',age:'',day:'',boothId:'',boothName:'',slots:[]});
+members.push({name:'',age:'',day:'',boothId:'',boothName:'',boothAges:[],slots:[]});
 renderMembers();
 renderSchedule();
 </script>
