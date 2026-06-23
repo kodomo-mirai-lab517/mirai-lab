@@ -452,7 +452,9 @@ function onMemberBoothChange(i,bId){
       const age=parseInt(members[i].age);
       const ok=b.ages.some(function(a){
         if(a==='保護者') return false;
-        const nums=a.match(/[0-9]+/g);if(!nums)return false;
+        // 全角数字・全角チルダ対応
+        const normalized=a.replace(/[０-９]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-0xFEE0);}).replace(/〜/g,'-').replace(/～/g,'-');
+        const nums=normalized.match(/[0-9]+/g);if(!nums)return false;
         if(nums.length===1) return age===parseInt(nums[0]);
         return age>=parseInt(nums[0])&&age<=parseInt(nums[1]);
       })||b.ages.includes('保護者');
@@ -502,12 +504,12 @@ function submitReservation(){
     if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
     // 対象年齢の最終チェック（送信直前にも必ず確認する）
     const bForAge=(booths[m.day]||[]).find(x=>x.id===m.boothId);
-    alert('デバッグ: 体験者'+(i+1)+' age=['+m.age+'] booth=['+(bForAge?bForAge.name:'見つからず')+'] ages=['+(bForAge&&bForAge.ages?bForAge.ages.join(','):'なし')+']');
     if(bForAge&&bForAge.ages&&bForAge.ages.length){
       const ageNum=parseInt(m.age);
       const ageOk=bForAge.ages.some(function(a){
         if(a==='保護者')return false;
-        const nums=a.match(/[0-9]+/g);if(!nums)return false;
+        const normalized=a.replace(/[０-９]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-0xFEE0);}).replace(/〜/g,'-').replace(/～/g,'-');
+        const nums=normalized.match(/[0-9]+/g);if(!nums)return false;
         if(nums.length===1)return ageNum===parseInt(nums[0]);
         return ageNum>=parseInt(nums[0])&&ageNum<=parseInt(nums[1]);
       })||bForAge.ages.includes('保護者');
