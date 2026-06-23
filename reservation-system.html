@@ -361,7 +361,7 @@ function setViewMode(mode,el){
 }
 
 // ── MEMBERS ──
-function addMember(){members.push({name:'',age:'',day:'',boothId:'',slots:[]});renderMembers();}
+function addMember(){members.push({name:'',age:'',day:'',boothId:'',boothName:'',slots:[]});renderMembers();}
 function removeMember(i){members.splice(i,1);renderMembers();}
 function renderMembers(){
   const list=document.getElementById('members-list');
@@ -446,6 +446,11 @@ function buildSlotPicker(i){
 }
 function onMemberDayChange(i,day){members[i].day=day;members[i].boothId='';members[i].slots=[];renderMembers();}
 function onMemberBoothChange(i,bId){
+  // ブース名も保存しておく（年齢チェックのフォールバック用）
+  if(bId && members[i].day){
+    const bFound=(booths[members[i].day]||[]).find(x=>x.id===bId);
+    members[i].boothName = bFound ? bFound.name : '';
+  }
   if(bId&&members[i].age){
     const b=(booths[members[i].day]||[]).find(x=>x.id===bId);
     if(b&&b.ages&&b.ages.length){
@@ -503,7 +508,9 @@ function submitReservation(){
     if(!m.boothId){return showAlert('体験者'+(i+1)+'の希望ブースを選択してください','res-alert');}
     if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
     // 対象年齢の最終チェック（送信直前にも必ず確認する）
-    const bForAge=(booths[m.day]||[]).find(x=>x.id===m.boothId);
+    // IDでもブース名でも照合（どちらかが一致すれば取得）
+    const bForAge=(booths[m.day]||[]).find(x=>x.id===m.boothId)||
+                  (booths[m.day]||[]).find(x=>x.name===m.boothName);
     if(bForAge&&bForAge.ages&&bForAge.ages.length){
       const ageNum=parseInt(m.age);
       const ageOk=bForAge.ages.some(function(a){
@@ -725,7 +732,7 @@ function showModal(icon,title,body){document.getElementById('modal-icon').textCo
 function closeModal(){document.getElementById('modal').classList.remove('open');}
 
 // ── INIT ──
-members.push({name:'',age:'',day:'',boothId:'',slots:[]});
+members.push({name:'',age:'',day:'',boothId:'',boothName:'',slots:[]});
 renderMembers();
 renderSchedule();
 </script>
