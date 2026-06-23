@@ -413,7 +413,10 @@ function buildBoothOptions(i){
   const m=members[i];
   if(!m.day) return '<option value="">-- まず日程を選んでください --</option>';
   let opts='<option value="">-- ブースを選んでください --</option>';
-  (booths[m.day]||[]).forEach(b=>{opts+=`<option value="${b.id}" ${m.boothId===b.id?'selected':''}>${b.emoji} ${b.name}</option>`;});
+  (booths[m.day]||[]).forEach(b=>{
+    const agesJson=JSON.stringify(b.ages||[]).replace(/"/g,'&quot;');
+    opts+=`<option value="${b.id}" data-ages="${agesJson}" data-name="${b.name}" ${m.boothId===b.id?'selected':''}>${b.emoji} ${b.name}</option>`;
+  });
   return opts;
 }
 function getBoothAgeInfo(i){
@@ -446,14 +449,18 @@ function buildSlotPicker(i){
 }
 function onMemberDayChange(i,day){members[i].day=day;members[i].boothId='';members[i].slots=[];renderMembers();}
 function onMemberBoothChange(i,bId){
-  // ブース情報を直接メンバーに保存
-  if(bId && members[i].day){
-    const bFound=(booths[members[i].day]||[]).find(x=>x.id===bId);
-    members[i].boothName = bFound ? bFound.name : '';
-    members[i].boothAges = bFound ? (bFound.ages||[]) : [];
+  // data属性からages・nameを直接取得（最も確実な方法）
+  const sel=document.getElementById('m-booth-'+i);
+  if(sel && bId){
+    const opt=sel.querySelector('option[value="'+bId+'"]');
+    if(opt){
+      try{members[i].boothAges=JSON.parse(opt.getAttribute('data-ages')||'[]');}catch(e){members[i].boothAges=[];}
+      members[i].boothName=opt.getAttribute('data-name')||'';
+    } else {
+      members[i].boothAges=[];members[i].boothName='';
+    }
   } else {
-    members[i].boothName = '';
-    members[i].boothAges = [];
+    members[i].boothAges=[];members[i].boothName='';
   }
   if(bId&&members[i].age){
     const b=(booths[members[i].day]||[]).find(x=>x.id===bId);
@@ -618,12 +625,14 @@ function renderSchedule(){
       if(b.slots[slot]==='unavailable'){
         td.className='unavail-cell';td.innerHTML='<span class="chip-unavail">受付不可</span>';
       } else if(b.slots[slot]==='available'){
-        const res=(reservations[day]||[]).find(r=>r.boothId===b.id&&r.slotLabel===slot);
-        if(res){
+        const allRes=(reservations[day]||[]).filter(r=>r.boothId===b.id&&r.slotLabel===slot);
+        if(allRes.length>0){
           td.className='booked';
-          td.innerHTML=viewMode==='admin'
-            ?'<span class="chip-book">'+res.memberName+'('+res.memberAge+'歳)</span>'
-            :'<span class="chip-book">予約済</span>';
+          if(viewMode==='admin'){
+            td.innerHTML=allRes.map(r=>'<span class="chip-book">'+r.memberName+'('+r.memberAge+'歳)</span>').join('<br>');
+          } else {
+            td.innerHTML='<span class="chip-book">予約済</span>';
+          }
         } else td.innerHTML='<span class="chip-free">空き</span>';
       } else td.innerHTML='<span class="chip-na">―</span>';
       tr.appendChild(td);
