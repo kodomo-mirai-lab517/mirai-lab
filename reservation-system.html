@@ -471,7 +471,15 @@ function buildSlotPicker(i){
   });
   return html;
 }
-function onMemberDayChange(i,day){members[i].day=day;members[i].boothId='';members[i].slots=[];renderMembers();}
+function onMemberDayChange(i,day){
+  members[i].day=day;members[i].boothId='';members[i].slots=[];
+  renderMembers();
+  // 開催日選択後にもブース選択肢を年齢でフィルタ
+  setTimeout(function(){
+    const sel=document.getElementById('m-booth-'+i);
+    if(sel) sel.innerHTML=buildBoothOptions(i);
+  },100);
+}
 function onMemberBoothChange(i,bId){
   // data属性からages・nameを直接取得（最も確実な方法）
   const sel=document.getElementById('m-booth-'+i);
