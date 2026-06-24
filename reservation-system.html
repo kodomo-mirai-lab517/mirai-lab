@@ -409,14 +409,38 @@ function renderMembers(){
     list.appendChild(card);
   });
 }
+function ageMatchesBooth(ageNum, ages){
+  if(!ages||ages.length===0) return true; // 年齢設定なし＝全員OK
+  return ages.some(function(a){
+    if(a==='保護者') return false;
+    var norm=a.replace(/〜/g,'-').replace(/～/g,'-');
+    var nums=norm.match(/[0-9]+/g);
+    if(!nums) return false;
+    if(nums.length===1) return ageNum===parseInt(nums[0]);
+    return ageNum>=parseInt(nums[0])&&ageNum<=parseInt(nums[1]);
+  })||ages.includes('保護者');
+}
+
 function buildBoothOptions(i){
   const m=members[i];
   if(!m.day) return '<option value="">-- まず日程を選んでください --</option>';
+  const ageNum=parseInt(m.age)||0;
   let opts='<option value="">-- ブースを選んでください --</option>';
+  let hasOptions=false;
   (booths[m.day]||[]).forEach(b=>{
-    const agesJson=JSON.stringify(b.ages||[]).replace(/"/g,'&quot;');
-    opts+=`<option value="${b.id}" data-ages="${agesJson}" data-name="${b.name}" ${m.boothId===b.id?'selected':''}>${b.emoji} ${b.name}</option>`;
+    const ages=b.ages||[];
+    // 年齢が入力済みの場合は対象外ブースを除外
+    if(m.age && ageNum>0 && ages.length>0 && !ageMatchesBooth(ageNum,ages)){
+      // 対象外：グレーアウトして選択不可
+      opts+=`<option value="" disabled style="color:#ccc;">${b.emoji} ${b.name}（対象外：${ages.join('・')}）</option>`;
+    } else {
+      opts+=`<option value="${b.id}" ${m.boothId===b.id?'selected':''}>${b.emoji} ${b.name}</option>`;
+      hasOptions=true;
+    }
   });
+  if(!hasOptions && m.age && ageNum>0){
+    opts='<option value="">この年齢で参加できるブースがありません</option>';
+  }
   return opts;
 }
 function getBoothAgeInfo(i){
@@ -481,6 +505,19 @@ function onMemberBoothChange(i,bId){
 }
 function validateMemberAge(i){
   const m=members[i];
+  // 年齢が変わったらブース選択肢を再描画して対象外を除外
+  if(m.day){
+    const sel=document.getElementById('m-booth-'+i);
+    if(sel){
+      const currentVal=sel.value;
+      sel.innerHTML=buildBoothOptions(i);
+      // 現在選択中のブースが対象外になった場合はリセット
+      if(currentVal && !sel.querySelector('option[value="'+currentVal+'"]')){
+        members[i].boothId='';members[i].slots=[];
+        renderMembers();return;
+      }
+    }
+  }
   if(!m.boothId||!m.age||!m.day) return;
   const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
   if(!b||!b.ages||!b.ages.length) return;
@@ -518,32 +555,12 @@ function submitReservation(){
     if(!m.day){return showAlert('体験者'+(i+1)+'の開催日を選択してください','res-alert');}
     if(!m.boothId){return showAlert('体験者'+(i+1)+'の希望ブースを選択してください','res-alert');}
     if(m.slots.length===0){return showAlert('体験者'+(i+1)+'の希望時間を選択してください','res-alert');}
-    // 対象年齢の最終チェック（全方法で照合）
-    var checkAges = [];
-    // 方法1: メンバーに保存済みのages
-    if(m.boothAges && m.boothAges.length>0) checkAges = m.boothAges;
-    // 方法2: IDで照合
-    if(checkAges.length===0){
-      var bCheck=(booths[m.day]||[]).find(function(x){return x.id===m.boothId;});
-      if(bCheck && bCheck.ages && bCheck.ages.length>0) checkAges=bCheck.ages;
-    }
-    // 方法3: ブース名で照合
-    if(checkAges.length===0 && m.boothName){
-      var bCheck2=(booths[m.day]||[]).find(function(x){return x.name===m.boothName;});
-      if(bCheck2 && bCheck2.ages && bCheck2.ages.length>0) checkAges=bCheck2.ages;
-    }
-    if(checkAges.length>0){
-      var ageNum=parseInt(m.age);
-      var ageOk=checkAges.some(function(a){
-        if(a==='保護者') return false;
-        var norm=a.replace(/〜/g,'-').replace(/～/g,'-').replace(/[０-９]/g,function(s){return String.fromCharCode(s.charCodeAt(0)-0xFEE0);});
-        var nums=norm.match(/\d+/g);
-        if(!nums) return false;
-        if(nums.length===1) return ageNum===parseInt(nums[0]);
-        return ageNum>=parseInt(nums[0]) && ageNum<=parseInt(nums[1]);
-      })||checkAges.includes('保護者');
-      if(!ageOk){
-        return showAlert('体験者'+(i+1)+'（'+m.age+'歳）はこのブースの対象年齢「'+checkAges.join('・')+'」に含まれていません。','res-alert');
+    // 対象年齢の最終チェック（ブースのages配列で直接確認）
+    var bFinal=(booths[m.day]||[]).find(function(x){return x.id===m.boothId;});
+    if(bFinal && bFinal.ages && bFinal.ages.length>0){
+      var ageNumFinal=parseInt(m.age);
+      if(!ageMatchesBooth(ageNumFinal, bFinal.ages)){
+        return showAlert('体験者'+(i+1)+'（'+m.age+'歳）はこのブースの対象年齢「'+bFinal.ages.join('・')+'」に含まれていません。','res-alert');
       }
     }
     for(const slot of m.slots){
