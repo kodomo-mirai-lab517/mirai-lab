@@ -382,7 +382,7 @@ function renderMembers(){
         </div>
         <div class="fg">
           <label class="lbl">年齢 <span class="req">*</span></label>
-          <input class="inp" type="number" min="1" max="99" placeholder="例：8" value="${m.age}" oninput="members[${i}].age=this.value;validateMemberAge(${i})" onchange="members[${i}].age=this.value;validateMemberAge(${i})">
+          <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例：8" value="${m.age}" oninput="members[${i}].age=this.value.replace(/[^0-9]/g,'');this.value=members[${i}].age;refreshBoothOptions(${i});" onchange="members[${i}].age=this.value.replace(/[^0-9]/g,'');refreshBoothOptions(${i});">
         </div>
       </div>
       <div class="fg" style="margin-bottom:9px">
@@ -409,6 +409,29 @@ function renderMembers(){
     list.appendChild(card);
   });
 }
+function refreshBoothOptions(i){
+  // 年齢変更時にブース選択肢を即座に更新
+  const m=members[i];
+  if(!m.day) return;
+  const sel=document.getElementById('m-booth-'+i);
+  if(!sel) return;
+  const currentBoothId=sel.value;
+  sel.innerHTML=buildBoothOptions(i);
+  // 現在選択中のブースが対象外になった場合はリセット
+  if(currentBoothId){
+    const stillValid=sel.querySelector('option[value="'+currentBoothId+'"]');
+    if(!stillValid){
+      members[i].boothId='';
+      members[i].slots=[];
+      // スロットピッカーもリセット
+      const slotsEl=document.getElementById('m-slots-'+i);
+      if(slotsEl) slotsEl.innerHTML='<span style="color:#bbb;font-size:12px">ブースを選ぶと時間が表示されます</span>';
+      const hintEl=document.getElementById('m-slot-hint-'+i);
+      if(hintEl) hintEl.textContent='ブースを選んでから時間を選んでください';
+    }
+  }
+}
+
 function ageMatchesBooth(ageNum, ages){
   if(!ages||ages.length===0) return true; // 年齢設定なし＝全員OK
   return ages.some(function(a){
@@ -474,11 +497,8 @@ function buildSlotPicker(i){
 function onMemberDayChange(i,day){
   members[i].day=day;members[i].boothId='';members[i].slots=[];
   renderMembers();
-  // 開催日選択後にもブース選択肢を年齢でフィルタ
-  setTimeout(function(){
-    const sel=document.getElementById('m-booth-'+i);
-    if(sel) sel.innerHTML=buildBoothOptions(i);
-  },100);
+  // 開催日選択後にブース選択肢を年齢でフィルタ
+  setTimeout(function(){refreshBoothOptions(i);},50);
 }
 function onMemberBoothChange(i,bId){
   // data属性からages・nameを直接取得（最も確実な方法）
