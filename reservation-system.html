@@ -382,7 +382,7 @@ function renderMembers(){
         </div>
         <div class="fg">
           <label class="lbl">年齢 <span class="req">*</span></label>
-          <input class="inp" type="number" min="1" max="99" placeholder="例：8" value="${m.age}" oninput="members[${i}].age=this.value;validateMemberAge(${i})">
+          <input class="inp" type="number" min="1" max="99" placeholder="例：8" value="${m.age}" oninput="members[${i}].age=this.value;validateMemberAge(${i})" onchange="members[${i}].age=this.value;validateMemberAge(${i})">
         </div>
       </div>
       <div class="fg" style="margin-bottom:9px">
@@ -505,18 +505,24 @@ function onMemberBoothChange(i,bId){
 }
 function validateMemberAge(i){
   const m=members[i];
-  // 年齢が変わったらブース選択肢を再描画して対象外を除外
+  // 年齢が変わったらブース選択肢を強制再描画
   if(m.day){
-    const sel=document.getElementById('m-booth-'+i);
-    if(sel){
-      const currentVal=sel.value;
-      sel.innerHTML=buildBoothOptions(i);
-      // 現在選択中のブースが対象外になった場合はリセット
-      if(currentVal && !sel.querySelector('option[value="'+currentVal+'"]')){
-        members[i].boothId='';members[i].slots=[];
-        renderMembers();return;
+    // 少し遅延させてDOMが確実に更新された後に実行
+    setTimeout(function(){
+      const sel=document.getElementById('m-booth-'+i);
+      if(sel){
+        const currentVal=sel.value;
+        sel.innerHTML=buildBoothOptions(i);
+        // 現在選択中のブースが対象外になった場合はリセット
+        if(currentVal){
+          const stillValid=sel.querySelector('option[value="'+currentVal+'"]');
+          if(!stillValid){
+            members[i].boothId='';members[i].slots=[];
+            renderMembers();
+          }
+        }
       }
-    }
+    },50);
   }
   if(!m.boothId||!m.age||!m.day) return;
   const b=(booths[m.day]||[]).find(x=>x.id===m.boothId);
