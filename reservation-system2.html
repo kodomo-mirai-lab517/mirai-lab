@@ -382,7 +382,7 @@ function renderMembers(){
         </div>
         <div class="fg">
           <label class="lbl">年齢 <span class="req">*</span></label>
-          <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例：8" value="${m.age}" oninput="members[${i}].age=this.value.replace(/[^0-9]/g,'');this.value=members[${i}].age;refreshBoothOptions(${i});" onchange="members[${i}].age=this.value.replace(/[^0-9]/g,'');refreshBoothOptions(${i});">
+          <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例：8" value="${m.age}" id="age-input-${i}" oninput="onAgeInput(${i},this.value)" onchange="onAgeInput(${i},this.value)">
         </div>
       </div>
       <div class="fg" style="margin-bottom:9px">
@@ -409,6 +409,13 @@ function renderMembers(){
     list.appendChild(card);
   });
 }
+function onAgeInput(i, val){
+  members[i].age = val.replace(/[^0-9]/g,'');
+  var el = document.getElementById('age-input-'+i);
+  if(el) el.value = members[i].age;
+  refreshBoothOptions(i);
+}
+
 function refreshBoothOptions(i){
   // 年齢変更時にブース選択肢を即座に更新
   const m=members[i];
