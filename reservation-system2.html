@@ -440,15 +440,16 @@ function refreshBoothOptions(i){
 }
 
 function ageMatchesBooth(ageNum, ages){
-  if(!ages||ages.length===0) return true; // 年齢設定なし＝全員OK
-  return ages.some(function(a){
-    if(a==='保護者') return false;
+  if(!ages||ages.length===0) return true;
+  var numericAges=ages.filter(function(a){return a!=='保護者';});
+  if(numericAges.length===0) return true;
+  return numericAges.some(function(a){
     var norm=a.replace(/〜/g,'-').replace(/～/g,'-');
     var nums=norm.match(/[0-9]+/g);
     if(!nums) return false;
     if(nums.length===1) return ageNum===parseInt(nums[0]);
     return ageNum>=parseInt(nums[0])&&ageNum<=parseInt(nums[1]);
-  })||ages.includes('保護者');
+  });
 }
 
 function buildBoothOptions(i){
