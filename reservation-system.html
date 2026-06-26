@@ -699,7 +699,13 @@ function loadAllData(){
   .then(function(d){
     if(d.status==='ok'&&d.booths&&d.booths.length>0){
       booths={'0829':[],'0830':[]};
-      d.booths.forEach(function(b){if(booths[b.day])booths[b.day].push(b);});
+      d.booths.forEach(function(b){
+        // dayを文字列に変換（スプレッドシートで数値になる場合の対応）
+        var dayStr = String(b.day);
+        if(dayStr.length===3) dayStr='0'+dayStr; // 829→0829
+        b.day=dayStr;
+        if(booths[dayStr])booths[dayStr].push(b);
+      });
     }
     return fetch(GAS_URL+'?type=loadReservations');
   })
